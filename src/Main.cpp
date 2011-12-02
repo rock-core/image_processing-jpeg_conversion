@@ -17,22 +17,33 @@ int main(int argc, char** argv)
     int height = atoi(argv[3]);    
     
     // Load jpeg.
-    conv.loadJpeg(file_name, width, height);
-    base::samples::frame::Frame frame_loaded = conv.getFrame();
+    base::samples::frame::Frame frame_loaded;
+    conv.loadJpeg(file_name, width, height, frame_loaded);
 
-    // Convert jpeg to rgba nd store as file_name.ppm.
-    conv.decompress(frame_loaded);
-    std::string name_rgb(argv[1]);
-    std::cout << "name: " << name_rgb << std::endl;
-    size_t pos_dot = name_rgb.find_last_of(".");
-    std::cout << "remove from " << pos_dot << std::endl;
-    name_rgb.erase(pos_dot, name_rgb.size());
-    conv.storeFrame(name_rgb);
+    size_t pos_dot = file_name.find_last_of(".");
+    file_name.erase(pos_dot, file_name.size());
 
-    // Compress rgb back to jpg and store as file_name2.jpg
-    base::samples::frame::Frame frame_rgb = conv.getFrame();
-    conv.compress(frame_rgb);
-    conv.storeFrame(name_rgb + "2.jpg");
+    base::samples::frame::Frame frame_output;
+    
+    // RGB
+    frame_output.frame_mode = base::samples::frame::MODE_RGB;
+    conv.decompress(frame_loaded, frame_output);
+    conv.storeFile(file_name + "RGB", frame_output);
+
+    // BGR
+    frame_output.frame_mode = base::samples::frame::MODE_BGR;
+    conv.decompress(frame_loaded, frame_output);
+    conv.storeFile(file_name + "BGR", frame_output);
+
+    // Grayscale
+    frame_output.frame_mode = base::samples::frame::MODE_GRAYSCALE;
+    conv.decompress(frame_loaded, frame_output);
+    conv.storeFile(file_name + "GRAYSCALE", frame_output);
+
+    // UYVY
+    frame_output.frame_mode = base::samples::frame::MODE_UYVY;
+    conv.decompress(frame_loaded, frame_output);
+    conv.storeFile(file_name + "UYVY", frame_output);
 
 	return 0;
 }
