@@ -37,6 +37,15 @@ void JpegConversion::compress(base::samples::frame::Frame const& frame_input,
     jpeg_create_compress(&cinfo);
     cinfo.err = jpeg_std_error(&jerr);
 
+    // Input
+    cinfo.image_width      = frame_input.getWidth();
+    cinfo.image_height     = frame_input.getHeight();
+    cinfo.input_components = frame_input.getPixelSize();
+    cinfo.in_color_space   = j_color_space;
+
+    // Output
+    jpeg_set_defaults(&cinfo);
+    jpeg_set_quality (&cinfo, mJpegQuality, true);
     // Define destination.
     mDestMgr.next_output_byte    = mBuffer;
     mDestMgr.free_in_buffer      = mBufferSize;
@@ -45,14 +54,7 @@ void JpegConversion::compress(base::samples::frame::Frame const& frame_input,
     mDestMgr.empty_output_buffer = empty_buffer; // method
     mDestMgr.term_destination    = term_buffer; // method
     cinfo.dest = &mDestMgr;
-
-    cinfo.image_width      = frame_input.getWidth();
-    cinfo.image_height     = frame_input.getHeight();
-    cinfo.input_components = frame_input.getPixelSize();
-    cinfo.in_color_space   = j_color_space;
  
-    jpeg_set_defaults(&cinfo);
-    jpeg_set_quality (&cinfo, mJpegQuality, true);
     jpeg_start_compress(&cinfo, true);
 
     uint8_t const* image_to_compress =  frame_input.getImageConstPtr();
@@ -203,7 +205,7 @@ J_COLOR_SPACE JpegConversion::getJpegColorspace(base::samples::frame::frame_mode
 }
 
 bool JpegConversion::storeFrame(std::string filename,
-        base::samples::frame::Frame const& frame) {
+        base::samples::frame::Frame const& frame, std::string* used_filename) {
 
     if(frame.getNumberOfBytes() == 0) {
         std::cerr << "Frame is empty." << std::endl;
@@ -243,6 +245,10 @@ bool JpegConversion::storeFrame(std::string filename,
         std::cerr << "File " << filename << "could not be opened." << std::endl;
         return false;
     }
+
+    // Pass back filename.
+    if(used_filename != NULL)
+        *used_filename = filename;
 
     // Write header.
     fwrite(header, 1, written, pFile); 

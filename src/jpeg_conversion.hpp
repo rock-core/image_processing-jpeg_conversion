@@ -73,9 +73,11 @@ class JpegConversion {
     /**
      * If available, the Frame will be stored to 'filename'.
      * If a folder is not available, the file will not be created.
+     * \param filename If a string has been passed, it will be set to the choosen filename.
      * \return True on success.
      */
-    bool storeFrame(std::string filename, base::samples::frame::Frame const& frame);
+    bool storeFrame(std::string filename, base::samples::frame::Frame const& frame,
+            std::string* used_filename=NULL);
 
     /**
      * Loads the jpeg and store its content to 'mFrameOutput'.
