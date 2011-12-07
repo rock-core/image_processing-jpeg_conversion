@@ -22,11 +22,11 @@ class JpegConversion {
 
  public:
     JpegConversion() : mBuffer(NULL), mBufferSize(0), mFlipBuffer(NULL), mFlipBufferSize(0),
-            cinfo(), dinfo(), jerr(), mSrcMgr(), mDestMgr(), mJpegQuality(JPEG_QUALITY) { 
+            mJpegQuality(JPEG_QUALITY) { 
     }
 
     JpegConversion(unsigned int jpeg_quality) : mBuffer(NULL), mBufferSize(0),
-            cinfo(), dinfo(), jerr(), mSrcMgr(), mDestMgr(), mJpegQuality(jpeg_quality) {
+            mJpegQuality(jpeg_quality) {
         if(mJpegQuality > 100)
             mJpegQuality = 100;
     }
@@ -133,12 +133,6 @@ class JpegConversion {
 
     unsigned char* mFlipBuffer; // Used to convert BGR to RGB.
     unsigned int mFlipBufferSize;
-
-    struct jpeg_compress_struct cinfo;
-	struct jpeg_decompress_struct dinfo; 
-    struct jpeg_error_mgr jerr;
-    struct jpeg_source_mgr mSrcMgr;
-    struct jpeg_destination_mgr mDestMgr;
 
     int mJpegQuality;
 };

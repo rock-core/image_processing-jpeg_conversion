@@ -5,6 +5,10 @@ namespace conversion {
 void JpegConversion::compress(base::samples::frame::Frame const& frame_input, 
         base::samples::frame::Frame& frame_output) {
 
+    struct jpeg_compress_struct cinfo;
+    struct jpeg_error_mgr jerr;
+    struct jpeg_destination_mgr mDestMgr;
+
     bool flip_rgb = false;
     bool is_jpeg = false;
 
@@ -34,8 +38,8 @@ void JpegConversion::compress(base::samples::frame::Frame const& frame_input,
         mBufferSize = new_buffer_size;
     }
 
+    cinfo.err = jpeg_std_error(&jerr); // Has to be set before calling jpeg-create...
     jpeg_create_compress(&cinfo);
-    cinfo.err = jpeg_std_error(&jerr);
 
     // Input
     cinfo.image_width      = frame_input.getWidth();
@@ -50,9 +54,9 @@ void JpegConversion::compress(base::samples::frame::Frame const& frame_input,
     mDestMgr.next_output_byte    = mBuffer;
     mDestMgr.free_in_buffer      = mBufferSize;
     // Set destination methods.
-    mDestMgr.init_destination    = init_buffer; // method
-    mDestMgr.empty_output_buffer = empty_buffer; // method
-    mDestMgr.term_destination    = term_buffer; // method
+    mDestMgr.init_destination    = init_buffer; // ijg callback
+    mDestMgr.empty_output_buffer = empty_buffer; // ijg callback
+    mDestMgr.term_destination    = term_buffer; // ijg callback
     cinfo.dest = &mDestMgr;
  
     jpeg_start_compress(&cinfo, true);
@@ -98,8 +102,15 @@ void JpegConversion::compress(base::samples::frame::Frame const& frame_input,
     jpeg_destroy_compress(&cinfo);
 }
 
+
+
+
 void JpegConversion::decompress(base::samples::frame::Frame const& frame_input,
         base::samples::frame::Frame& frame_output) {  
+
+	struct jpeg_decompress_struct dinfo; 
+    struct jpeg_error_mgr jerr;
+    struct jpeg_source_mgr mSrcMgr;
 
     // The input frame has to be a JPEG.
     bool input_flip_rgb = false;
@@ -130,21 +141,25 @@ void JpegConversion::decompress(base::samples::frame::Frame const& frame_input,
     }
 
     // Resize output frame if necessary.
+    // Resets the memory every time!
+    // Attention: If frame_output.frame_mode has been changed directly ('init()' has not been used),
+    // you can get problems working with greyscale and color jpegs ('init' wont do the required 
+    // changes resulting in a wrong pixel size, size etc.)
     frame_output.init(frame_input.getWidth(), frame_input.getHeight(), 8, 
             frame_output.getFrameMode());
 
+    dinfo.err = jpeg_std_error(&jerr); // Has to be set before calling jpeg-create...
     jpeg_create_decompress(&dinfo);
-    dinfo.err = jpeg_std_error(&jerr);
 
     // Define source (input frame).
     mSrcMgr.next_input_byte = frame_input.getImageConstPtr();
     mSrcMgr.bytes_in_buffer = frame_input.getNumberOfBytes();
     // Set source methods.
-    mSrcMgr.init_source = my_init_source;
-    mSrcMgr.fill_input_buffer = my_fill_input_buffer;
-    mSrcMgr.skip_input_data = my_skip_input_data;
-    mSrcMgr.resync_to_restart = my_resync_to_restart;
-    mSrcMgr.term_source = my_term_source;
+    mSrcMgr.init_source = my_init_source; // ijg callback
+    mSrcMgr.fill_input_buffer = my_fill_input_buffer; // ijg callback
+    mSrcMgr.skip_input_data = my_skip_input_data; // ijg callback
+    mSrcMgr.resync_to_restart = my_resync_to_restart; // ijg callback
+    mSrcMgr.term_source = my_term_source; // ijg callback
     dinfo.src = &mSrcMgr;
 
     // Read file header, set default decompression parameters, image size...
@@ -154,7 +169,13 @@ void JpegConversion::decompress(base::samples::frame::Frame const& frame_input,
     dinfo.output_height = frame_output.getHeight();
     dinfo.out_color_space = j_color_space_output;
     dinfo.out_color_components = frame_output.getPixelSize();
-    //dinfo.output_components = 1; // What does this mean?
+    //dinfo.output_components = 3; // What does this mean?
+
+    // Color conversion JCS_GRAYSCALE to JCS_YCbCr is not supported by IJG
+    if(dinfo.jpeg_color_space == JCS_GRAYSCALE &&
+            dinfo.out_color_space == JCS_YCbCr) {
+        std::cout << "JCS_GRAYSCALE can not be decompressed to JCS_YCbCr" << std::endl;
+    }
 
     // Start decompressor.
     (void) jpeg_start_decompress(&dinfo);
@@ -306,9 +327,10 @@ bool JpegConversion::loadJpeg(std::string const& filename, uint32_t const width,
     long result = fread (frame.getImagePtr(), 1, jpeg_size, pFile);
     if (result != jpeg_size) {
         std::cerr << "Only " << result << "/" << jpeg_size << "could be read." << std::endl;
+        fclose(pFile);
         return false;
     }
-
+    fclose(pFile);
     return true;
 }
 
