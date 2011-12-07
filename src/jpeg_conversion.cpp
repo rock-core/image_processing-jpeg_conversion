@@ -143,7 +143,7 @@ void JpegConversion::decompress(base::samples::frame::Frame const& frame_input,
     // Resize output frame if necessary.
     // Resets the memory every time!
     // Attention: If frame_output.frame_mode has been changed directly ('init()' has not been used),
-    // you can get problems working with greyscale and color jpegs ('init' wont do the required 
+    // you can get problems working with greyscale and color jpegs ('init()' wont do the required 
     // changes resulting in a wrong pixel size, size etc.)
     frame_output.init(frame_input.getWidth(), frame_input.getHeight(), 8, 
             frame_output.getFrameMode());
@@ -214,7 +214,6 @@ J_COLOR_SPACE JpegConversion::getJpegColorspace(base::samples::frame::frame_mode
     switch(frame_mode) {
         case MODE_GRAYSCALE: return JCS_GRAYSCALE;
         case MODE_RGB: return JCS_RGB;
-        case MODE_UYVY: return JCS_YCbCr;
         case MODE_BGR: // Channels have to be flipped manually.
             flip_rgb = true;
             return JCS_RGB;
@@ -274,14 +273,9 @@ bool JpegConversion::storeFrame(std::string filename,
     // Write header.
     fwrite(header, 1, written, pFile); 
 
+    unsigned int bytes_written = 0;
     if(is_jpeg) {
-        unsigned int bytes_written = fwrite(frame.getImageConstPtr(), 1, 
-                frame.getNumberOfBytes(), pFile);
-        if(bytes_written != frame.getNumberOfBytes()) {
-            std::cerr << "Only " << bytes_written << "/" << frame.getNumberOfBytes() << 
-                    " could be written." << std::endl;
-            return false;
-        }
+        bytes_written = fwrite(frame.getImageConstPtr(), 1, frame.getNumberOfBytes(), pFile);
     } else {
         unsigned char const* data = frame.getImageConstPtr();
         unsigned char const* end = frame.getLastConstByte() + 1;
@@ -292,8 +286,16 @@ bool JpegConversion::storeFrame(std::string filename,
             fprintf(pFile, "%d ", (int)*data);
             counter++;
         }
-        std::cout << "Wrote " << counter << " bytes, " << counter / 3 << " pixel. " << std::endl;
+        bytes_written = counter;
     }
+
+    if(bytes_written != frame.getNumberOfBytes()) {
+        std::cerr << "Only " << bytes_written << "/" << frame.getNumberOfBytes() << 
+                " could be written." << std::endl;
+        return false;
+    }
+
+    std::cout << bytes_written << " bytes written." << std::endl;
     fclose(pFile);
     return true;
 }

@@ -1,3 +1,18 @@
+/*
+ * \file    jpeg_conversion.hpp
+ *  
+ * \brief   Jpeg-frame conversion using the IJG library.
+ *
+ * \details Converts MODE_JPEG to MODE_GRAYSCALE, MODE_RGB or MODE_BGR and vice versa.
+ *          
+ *          German Research Center for Artificial Intelligence\n
+ *          Project: Rimres
+ *
+ * \date    07.12.11
+ *
+ * \author  Stefan.Haase@dfki.de
+ */
+
 #ifndef _JPEG_CONVERSION_H_
 #define _JPEG_CONVERSION_H_
 
@@ -13,7 +28,9 @@
 namespace conversion {
 
 /**
- * Only 8bit channels are used.
+ * Allows to convert jpeg-frames using the IJG library.
+ * Decompress MODE_JPEG to MODE_GRAYSCALE, MODE_RGB or MODE_BGR and \n
+ * compress MODE_GRAYSCALE, MODE_RGB or MODE_BGR to MODE_JPEG.
  */
 class JpegConversion {
 
@@ -25,8 +42,8 @@ class JpegConversion {
             mJpegQuality(JPEG_QUALITY) { 
     }
 
-    JpegConversion(unsigned int jpeg_quality) : mBuffer(NULL), mBufferSize(0),
-            mJpegQuality(jpeg_quality) {
+    JpegConversion(unsigned int jpeg_quality) : mBuffer(NULL), mBufferSize(0), 
+            mFlipBuffer(NULL), mFlipBufferSize(0), mJpegQuality(jpeg_quality) {
         if(mJpegQuality > 100)
             mJpegQuality = 100;
     }
@@ -40,7 +57,7 @@ class JpegConversion {
 
     /**
      * Compresses the passed image to JPEG. Supported frame color formats are MODE_GRAYSCALE,
-     * MODE_RGB, MODE_BGR, MODE_JPEG and MODE_UYVY. To keep 'frame_input' constant, using MODE_BGR
+     * MODE_RGB, MODE_BGR and MODE_JPEG. To keep 'frame_input' constant, using MODE_BGR
      * creates an extra copy of the passed image. Using the jpeg quality passed in the constructor.
      * Throws a std::runtime_error if the color mode of the input image is not supported.
      * \param frame_input Image which should be converted to jpeg-format. Input frame has to 
@@ -55,8 +72,10 @@ class JpegConversion {
      * color format of the output image is not supported.
      * \param frame_input Input image, must be of color format MODE_JPEG.
      * \param frame_output Has to contain the color format (MODE_GRAYSCALE,
-     * MODE_RGB, MODE_BGR, MODE_JPEG and MODE_UYVY) the input jpeg should be converted to.
-     * Will be resized if necessary. Color channel data depth will be set to 8.
+     * MODE_RGB, MODE_BGR and MODE_JPEG) the input jpeg should be converted to.
+     * Will be resized if necessary. Color channel data depth will be set to 8.\n
+     * Important: Always use frame.init(... ) to set the color format! Otherwise
+     * the internal 'init()' call could be ignored.
      */
     void decompress(base::samples::frame::Frame const& frame_input, base::samples::frame::Frame& frame_output);
 
