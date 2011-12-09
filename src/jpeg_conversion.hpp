@@ -43,7 +43,7 @@ class JpegConversion {
     }
 
     JpegConversion(unsigned int jpeg_quality) : mBuffer(NULL), mBufferSize(0), 
-            mFlipBuffer(NULL), mFlipBufferSize(0), mJpegQuality(jpeg_quality) {
+            mFlipBuffer(NULL), mFlipBufferSize(0), mJpegQuality(jpeg_quality){
         if(mJpegQuality > 100)
             mJpegQuality = 100;
     }
@@ -77,7 +77,26 @@ class JpegConversion {
      * Important: Always use frame.init(... ) to set the color format! Otherwise
      * the internal 'init()' call could be ignored.
      */
-    void decompress(base::samples::frame::Frame const& frame_input, base::samples::frame::Frame& frame_output);
+    void decompress(base::samples::frame::Frame const& frame_input, 
+            base::samples::frame::frame_mode_t const decompress_to,
+             base::samples::frame::Frame& frame_output);
+
+    /**
+     * Required by FrameHelper, abstracting from frames.
+     * Take care to allocate enough memory for the decompressed image! 
+     * If you are unsure about that, use 'decompress(frame, frame, frame_mode)' instead.
+     * \param src Pointer to JPEG data.
+     * \param width Width of the input and the output image.
+     * \param height Heigth of the input and the output image.
+     * \param decompress_to Frame mode to decompress to.
+     * \param dst Pointer to memory which should receive the decompressed image.
+     */
+    void decompress(uint8_t const* src, 
+            size_t src_size,
+            int width, 
+            int height,
+            base::samples::frame::frame_mode_t const decompress_to,  
+            uint8_t* dst);
 
     /**
      * Maps the frame colorspace to the IJG colorspace.

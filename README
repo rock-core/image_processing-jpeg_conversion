@@ -1,3 +1,5 @@
+Allows frame conversion from JPEG to RGB, BGR and GRAYSCALE and vice versa. 
+
 NOTE
 This directory structure follows some simple rules, to allow for generic build
 processes and simplify reuse of this project. 

@@ -2,7 +2,7 @@
 
 namespace conversion {
 
-void JpegConversion::compress(base::samples::frame::Frame const& frame_input, 
+void JpegConversion::compress(base::samples::frame::Frame const& frame_input,
         base::samples::frame::Frame& frame_output) {
 
     struct jpeg_compress_struct cinfo;
@@ -102,15 +102,9 @@ void JpegConversion::compress(base::samples::frame::Frame const& frame_input,
     jpeg_destroy_compress(&cinfo);
 }
 
-
-
-
-void JpegConversion::decompress(base::samples::frame::Frame const& frame_input,
+void JpegConversion::decompress(base::samples::frame::Frame const& frame_input, 
+        base::samples::frame::frame_mode_t const decompress_to, 
         base::samples::frame::Frame& frame_output) {  
-
-	struct jpeg_decompress_struct dinfo; 
-    struct jpeg_error_mgr jerr;
-    struct jpeg_source_mgr mSrcMgr;
 
     // The input frame has to be a JPEG.
     bool input_flip_rgb = false;
@@ -122,17 +116,40 @@ void JpegConversion::decompress(base::samples::frame::Frame const& frame_input,
         throw  std::runtime_error("Only JPEGs can be decompressed.");
     }
 
+    frame_output.init(frame_input.getWidth(), frame_input.getHeight(), 8, 
+            decompress_to);
+
+    decompress(frame_input.getImageConstPtr(),
+        frame_input.getNumberOfBytes(),
+        frame_input.getWidth(),
+        frame_input.getHeight(),
+        decompress_to,
+        frame_output.getImagePtr());
+}
+        
+void JpegConversion::decompress(uint8_t const* src, 
+        size_t src_size,
+        int width, 
+        int height,
+        base::samples::frame::frame_mode_t const decompress_to,  
+        uint8_t* dst) {
+
+    if(src == NULL || dst == NULL) {
+        std::cerr << "NULL pointer passed to decompress()." << std::endl;
+        return;
+    }
+
     // Just copy input if we should decompress to JPEG and abort if the color format
     // of the output image is not supported.
     bool output_flip_rgb = false;
     bool output_is_jpeg = false;
 
-    J_COLOR_SPACE j_color_space_output = getJpegColorspace(frame_output.getFrameMode(), 
+    J_COLOR_SPACE j_color_space_output = getJpegColorspace(decompress_to, 
             output_flip_rgb, output_is_jpeg);
 
     if(output_is_jpeg) {
         std::cout << "Image already compressed, done" << std::endl;
-        frame_output.init(frame_input);
+        memcpy(dst, src, src_size);
         return;
     }
 
@@ -140,20 +157,33 @@ void JpegConversion::decompress(base::samples::frame::Frame const& frame_input,
         throw  std::runtime_error("Frame can not be decompressed to the color mode of the output frame");
     }
 
+	struct jpeg_decompress_struct dinfo; 
+    struct jpeg_error_mgr jerr;
+    struct jpeg_source_mgr mSrcMgr;
+
+    // Request pixel size and image size of the decompressed image.
+    base::samples::frame::Frame frame_tmp;
+    frame_tmp.frame_mode = decompress_to;
+    frame_tmp.setDataDepth(8);
+    int dst_pixel_size = frame_tmp.getPixelSize();
+    size_t dst_size = width * height * dst_pixel_size;    
+
+    /*
     // Resize output frame if necessary.
-    // Resets the memory every time!
-    // Attention: If frame_output.frame_mode has been changed directly ('init()' has not been used),
-    // you can get problems working with greyscale and color jpegs ('init()' wont do the required 
-    // changes resulting in a wrong pixel size, size etc.)
-    frame_output.init(frame_input.getWidth(), frame_input.getHeight(), 8, 
-            frame_output.getFrameMode());
+    // Resets the memory every time! How to avoid?
+    if(!mFrameInitialized) {
+        frame_output.init(frame_input.getWidth(), frame_input.getHeight(), 8, 
+                decompress_to);
+    }
+    mFrameInitialized = false;
+    */
 
     dinfo.err = jpeg_std_error(&jerr); // Has to be set before calling jpeg-create...
     jpeg_create_decompress(&dinfo);
 
     // Define source (input frame).
-    mSrcMgr.next_input_byte = frame_input.getImageConstPtr();
-    mSrcMgr.bytes_in_buffer = frame_input.getNumberOfBytes();
+    mSrcMgr.next_input_byte = src;
+    mSrcMgr.bytes_in_buffer = src_size;
     // Set source methods.
     mSrcMgr.init_source = my_init_source; // ijg callback
     mSrcMgr.fill_input_buffer = my_fill_input_buffer; // ijg callback
@@ -165,10 +195,10 @@ void JpegConversion::decompress(base::samples::frame::Frame const& frame_input,
     // Read file header, set default decompression parameters, image size...
     (void) jpeg_read_header(&dinfo, TRUE);
 
-    dinfo.output_width = frame_output.getWidth();
-    dinfo.output_height = frame_output.getHeight();
+    dinfo.output_width = width;
+    dinfo.output_height = height;
     dinfo.out_color_space = j_color_space_output;
-    dinfo.out_color_components = frame_output.getPixelSize();
+    dinfo.out_color_components = dst_pixel_size;
     //dinfo.output_components = 3; // What does this mean?
 
     // Color conversion JCS_GRAYSCALE to JCS_YCbCr is not supported by IJG
@@ -181,11 +211,11 @@ void JpegConversion::decompress(base::samples::frame::Frame const& frame_input,
     (void) jpeg_start_decompress(&dinfo);
 
     // Physical row width in output buffer.
-    int row_stride =  frame_output.getWidth() * frame_output.getPixelSize();
+    int row_stride =  width * dst_pixel_size;
 
     // Decompress jpeg row by row.
-    unsigned char* pos = frame_output.getImagePtr(); // Write directly into output frame.
-    unsigned char* pos_end = frame_output.getLastByte() + 1; // Use first byte after image memory.
+    unsigned char* pos = dst; // Write directly into output frame.
+    unsigned char* pos_end = dst + dst_size;
     while (dinfo.output_scanline < dinfo.output_height) {
         // jpeg_read_scanlines expects an array of pointers to scanlines.
         // Here the array is only one element long, but you could ask for
@@ -204,7 +234,7 @@ void JpegConversion::decompress(base::samples::frame::Frame const& frame_input,
 
     // Flip R and B if BGR should be created.
     if(output_flip_rgb) {
-        switchRB(frame_output.getNumberOfBytes(), frame_output.getImagePtr());
+        switchRB(dst_size, dst);
     }
 }
 
