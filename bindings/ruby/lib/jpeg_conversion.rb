@@ -1,0 +1,1 @@
+require 'jpegconversion_ruby'
