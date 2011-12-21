@@ -109,10 +109,14 @@ class JpegConversion {
             bool& flip_rgb, bool& is_jpeg);
 
     /**
-     * If available, the Frame will be stored to 'filename'.
-     * If a folder is not available, the file will not be created.
-     * \param filename If a string has been passed, it will be set to the choosen filename.
-     * \return True on success.
+     * If not empty, the Frame will be stored to 'filename'.
+     * Take care that the path is valid.
+     * \param filename Just pass the plain name of the file without any extension.
+     * \param frame Frame to store. Valid modes are MODE_RGB, MODE_BGR, MODE_GRAYSCALE and MODE_JPEG.
+     * \param used_filename According to the frame type the file extension will be added
+     * to the passed filename. You can pass the address of a string to 'used_filename' to receive
+     * the complete filename (file extension included) which will be used.
+     * \return True if the complete image could be written.
      */
     bool storeFrame(std::string filename, base::samples::frame::Frame const& frame,
             std::string* used_filename=NULL);
