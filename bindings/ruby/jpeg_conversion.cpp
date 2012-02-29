@@ -27,7 +27,7 @@ Object do_store_frame(Object self, String filename, Object roptr_frame)
 * Initialise method in order to 
 */
 extern "C"
-void Init_jpegconversion_ruby()
+void Init_jpeg_conversion_ext()
 {
     // Define module JpegConversion
     Rice::Module rb_mJpegConversion = define_module("Conversion");
