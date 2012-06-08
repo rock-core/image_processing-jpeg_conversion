@@ -25,6 +25,8 @@
 
 #include "base/samples/frame.h"
 
+#include <base/logging.h>
+
 namespace conversion {
 
 /**
@@ -163,11 +165,23 @@ class JpegConversion {
     static void term_buffer(jpeg_compress_struct* cinfo) {}
 
     // DECOMPRESS
-    static void my_init_source(jpeg_decompress_struct* cinfo) {}
-    static boolean my_fill_input_buffer(jpeg_decompress_struct* cinfo) {return true;}
-    static void my_skip_input_data(jpeg_decompress_struct* cinfo, long num_bytes) {}
-    static boolean my_resync_to_restart(jpeg_decompress_struct* cinfo, int desired) {return true;}
-    static void my_term_source(jpeg_decompress_struct* cinfo) {}
+    static void my_init_source(jpeg_decompress_struct* cinfo) {
+        LOG_DEBUG("jpeg my_init_source()");
+    }
+    static boolean my_fill_input_buffer(jpeg_decompress_struct* cinfo) {
+        LOG_DEBUG("jpeg my_fill_input_buffer");
+        return true;
+    }
+    static void my_skip_input_data(jpeg_decompress_struct* cinfo, long num_bytes) {
+        LOG_DEBUG("jpeg my_skip_input_data");
+    }
+    static boolean my_resync_to_restart(jpeg_decompress_struct* cinfo, int desired) {
+        LOG_DEBUG("jpeg my_resync_to_restart");
+        return true;
+    }
+    static void my_term_source(jpeg_decompress_struct* cinfo) {
+        LOG_DEBUG("jpeg my_term_source");
+    }
 
  private:
     unsigned char* mBuffer;
