@@ -7,7 +7,7 @@ module Conversion
             frame.size.height = height
             frame.size.width = width
             frame.frame_mode = :MODE_JPEG
-            frame.image = do_load_jpeg(file,width,height)
+            frame.image = do_from_file(file,width,height)
             return frame
         end
 
