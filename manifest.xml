@@ -9,5 +9,6 @@
   <depend package="rice" />
   <depend package="jpeg" />
   <depend package="base/types" />
+  <depend package="ruby" />
   <tags>needs_opt</tags>
 </package>
