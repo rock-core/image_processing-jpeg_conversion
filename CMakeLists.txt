@@ -6,5 +6,3 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/" ${CMAKE_MODULE_PATH})
 rock_init(jpeg_conversion 0.1)
 rock_standard_layout()
 
-add_subdirectory(bindings/ruby)
-
