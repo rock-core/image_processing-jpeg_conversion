@@ -7,6 +7,6 @@ Name: @TARGET_NAME@
 Description: @PROJECT_DESCRIPTION@
 Version: @PROJECT_VERSION@
 Requires: @DEPS_PKGCONFIG@
-Libs: -L${libdir} -llib@TARGET_NAME@.so
+Libs: -L${libdir} -l@PROJECT_NAME@
 Cflags: -I${includedir}
 
