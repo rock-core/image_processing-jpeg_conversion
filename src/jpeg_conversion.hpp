@@ -23,9 +23,9 @@
 
 #include "jpeglib.h"
 
-#include "base/samples/frame.h"
+#include <base/samples/Frame.hpp>
 
-#include <base/logging.h>
+#include <base/Logging.hpp>
 
 namespace conversion {
 
