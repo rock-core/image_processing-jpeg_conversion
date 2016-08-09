@@ -1,4 +1,5 @@
 #include "jpeg_conversion.hpp"
+#include <string.h>
 
 namespace conversion {
 
