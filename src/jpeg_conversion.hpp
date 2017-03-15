@@ -25,7 +25,7 @@
 
 #include <base/samples/Frame.hpp>
 
-#include <base/Logging.hpp>
+#include <base-logging/Logging.hpp>
 
 namespace conversion {
 
