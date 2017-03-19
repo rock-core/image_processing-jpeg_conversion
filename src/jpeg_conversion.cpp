@@ -330,7 +330,6 @@ bool JpegConversion::storeFrame(std::string filename,
 
     char header[128];
     int written = 0;
-    bool is_greyscale = false;
     bool is_jpeg = false;
     int width = frame.getWidth();
     int height = frame.getHeight();
@@ -344,7 +343,6 @@ bool JpegConversion::storeFrame(std::string filename,
         case base::samples::frame::MODE_GRAYSCALE:
             filename += ".pgm";
             written = snprintf(header, 128, "%c%c%c%d %d\n%d\n", 'P', '2', '\n', width, height, 255);
-            is_greyscale = true;
             break;
         case base::samples::frame::MODE_JPEG:
         case base::samples::frame::MODE_PJPG:
