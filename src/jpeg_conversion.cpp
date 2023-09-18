@@ -427,8 +427,26 @@ bool JpegConversion::loadJpeg(std::string const& filename, uint32_t const width,
         fclose(pFile);
         return false;
     }
+    if(width == 0 && height == 0)
+    {
+        frame.size = getSize(frame.image.data(), frame.image.size());
+    }
     fclose(pFile);
     return true;
+}
+
+/** Determine image dimension from JPEG header */
+base::samples::frame::frame_size_t JpegConversion::getSize(uint8_t const* data, size_t size)
+{
+    jpeg_decompress_struct dinfo;
+    jpeg_error_mgr jerr;
+    dinfo.err = jpeg_std_error(&jerr);
+    jpeg_create_decompress(&dinfo);
+    jpeg_mem_src(&dinfo, data, size);
+    jpeg_read_header(&dinfo, false);
+    base::samples::frame::frame_size_t const frame_size(dinfo.image_width, dinfo.image_height);
+    jpeg_destroy_decompress(&dinfo);
+    return frame_size;
 }
 
 // PRIVATE
