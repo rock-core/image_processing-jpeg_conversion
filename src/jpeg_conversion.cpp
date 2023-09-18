@@ -324,7 +324,7 @@ bool JpegConversion::storeFrame(std::string filename,
         base::samples::frame::Frame const& frame, std::string* used_filename) {
 
     if(frame.getNumberOfBytes() == 0) {
-        std::cerr << "Frame is empty." << std::endl;
+        LOG_ERROR("Frame is empty.");
         return false;
     }
 

@@ -16,12 +16,9 @@
 #ifndef _JPEG_CONVERSION_H_
 #define _JPEG_CONVERSION_H_
 
-#include <iostream>
-#include <exception>
-#include <stdexcept>
 #include <string>
 
-#include "jpeglib.h"
+#include <jpeglib.h>
 
 #include <base/samples/Frame.hpp>
 
