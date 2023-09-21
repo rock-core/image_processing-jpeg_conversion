@@ -16,12 +16,9 @@
 #ifndef _JPEG_CONVERSION_H_
 #define _JPEG_CONVERSION_H_
 
-#include <iostream>
-#include <exception>
-#include <stdexcept>
 #include <string>
 
-#include "jpeglib.h"
+#include <jpeglib.h>
 
 #include <base/samples/Frame.hpp>
 
@@ -125,9 +122,13 @@ class JpegConversion {
 
     /**
      * Loads the jpeg and store its content to 'mFrameOutput'.
+     * If width == height == 0, dimension are determined from the header.
      */
-    bool loadJpeg(std::string const& filename, uint32_t const width, uint32_t const height,
+    static bool loadJpeg(std::string const& filename, uint32_t const width, uint32_t const height,
             base::samples::frame::Frame& frame);
+
+    /** Determine image dimension from JPEG header */
+    static base::samples::frame::frame_size_t getSize(uint8_t const* data, size_t size);
 
  private:
     /**
